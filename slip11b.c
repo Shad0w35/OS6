@@ -43,4 +43,7 @@ int main(int argc, char** argv) {
     MPI_Finalize();
 
     return 0;
+    //TO RUN CODE : mpicc mpi_min.c -o mpi_min
+    //              mpirun -np 4 ./mpi_min
+
 }
