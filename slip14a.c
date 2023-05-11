@@ -1,116 +1,100 @@
 #include <stdio.h>
 #include <stdlib.h>
-#define SIZE 100
+#include <stdbool.h>
 
-#define NEWNODE (struct direntry *)malloc(sizeof(struct direntry))
+#define MAX_BLOCKS 100
 
-struct direntry
-{
-char fname[14];
-int start,count;
-struct direntry *next;
+typedef struct {
+    int start;
+    int length;
+    char name[20];
+} File;
+
+bool allocated[MAX_BLOCKS] = {false};
+File directory[MAX_BLOCKS];
+
+int n;
+
+void initializeDisk() {
+    int i;
+    for (i = 0; i < n; i++) {
+        allocated[i] = false;
+    }
 }
-*dirst=NULL,*dirend=NULL;
 
-int bitvector[SIZE];
-
-void main()
-{
-int ch1=0,i,j,k,n,flag;
-char fname[14];
-struct direntry *t1,*t2;
-for(i=0;i<SIZE;i++)
-{ bitvector[i]=rand()%2;
+void displayBitVector() {
+    int i;
+    printf("Bit Vector: ");
+    for (i = 0; i < n; i++) {
+        printf("%d ", allocated[i]);
+    }
+    printf("\n");
 }
 
-while(1)
-{
-  printf("\n\n1. Print Bit Vector");
-  printf("\n2. Create File");
-  printf("\n3. Print Directory");
-  printf("\n4. Delete File");
-  printf("\n5. Exit");
-  printf("\nEnter Your Choice : ");
-  scanf("%d",&ch1);
-  switch(ch1)
-  {
-    case 1 :
-      for(i=0;i<SIZE;i++)
-	printf("%4d",bitvector[i]);
-      break;
-    case 2 :
-      if(dirst==NULL)
-	dirst=dirend=NEWNODE;
-      else
-      {
-	dirend->next=NEWNODE;
-	dirend=dirend->next;
-      }
-      dirend->next=NULL;
-      printf("\nEnter A Filename : ");
-      scanf("%s",dirend->fname);
-      printf("\nEnter The Number of Blocks To Allocate : ");
-      scanf("%d",&n);
-      dirend->count=n;
-      for(i=0;i<100;i++)
-      {
-       if(bitvector[i]==1) //found free block
-       {
-	for(j=i;j<i+n;j++) //find next n free blocks
-	{
-	 if(bitvector[j]!=1)//not free
-	  break;
-	}//for
+void displayDirectory() {
+    int i;
+    printf("Directory:\n");
+    printf("Index\tStart\tLength\tName\n");
+    for (i = 0; i < n; i++) {
+        if (allocated[i]) {
+            printf("%d\t%d\t%d\t%s\n", i, directory[i].start, directory[i].length, directory[i].name);
+        }
+    }
+}
 
-	if(j==i+n) //found n contiguous free blocks
-	{
-	 dirend->start=i;
-	 for(k=i;k<j;k++) //allocate block
-	  bitvector[k]=0;
-	 break;
-	}//if
-       }//outer if
-      }
-      break;
-  case 3 :
-     printf("\nDirectory : ");
-     printf("\n--------------------------");
-     printf("\nFilename     Start  Count");
-     printf("\n--------------------------");
-     for(t1=dirst;t1!=NULL;t1=t1->next)
-      printf("\n%-10s %5d %5d",t1->fname,t1->start,t1->count);
-     printf("\n--------------------------");
-     break;
-  case 4 :
-     printf("\nEnter a Filename : ");
-     scanf("%s",fname);
-     t1=dirst;
-     while(t1!=NULL)
-     {
-      if(strcmp(t1->fname,fname)==0)
-	break;
-      t2=t1;
-      t1=t1->next;
-     }
-     if(t1!=NULL)//file found
-     {
-      for(i=t1->start;i<t1->start+t1->count;i++)
-       bitvector[i]=1;  //free blocks
+void deleteFile() {
+    char filename[20];
+    int i;
 
-      if(t1==dirst)
-	dirst=dirst->next;
-      else
-	t2->next=t1->next;
-      if(dirst==NULL)
-	dirend=NULL;
+    printf("Enter the name of the file to delete: ");
+    scanf("%s", filename);
 
-      free(t1);
-     }
-     else
-      printf("\nFile not found..\n");
-     break;
-    case 5: exit(0);
-   }
- }
+    for (i = 0; i < n; i++) {
+        if (allocated[i] && strcmp(directory[i].name, filename) == 0) {
+            allocated[i] = false;
+            printf("File '%s' deleted successfully.\n", filename);
+            return;
+        }
+    }
 
+    printf("File '%s' not found.\n", filename);
+}
+
+int main() {
+    int choice;
+
+    printf("Enter the number of blocks on the disk: ");
+    scanf("%d", &n);
+
+    initializeDisk();
+
+    do {
+        printf("\nSequential (Contiguous) File Allocation\n");
+        printf("1. Show Bit Vector\n");
+        printf("2. Show Directory\n");
+        printf("3. Delete File\n");
+        printf("4. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                displayBitVector();
+                break;
+            case 2:
+                displayDirectory();
+                break;
+            case 3:
+                deleteFile();
+                break;
+            case 4:
+                printf("Exiting the program.\n");
+                break;
+            default:
+                printf("Invalid choice. Please try again.\n");
+                break;
+        }
+    } while (choice != 4);
+
+    return 0;
 }
